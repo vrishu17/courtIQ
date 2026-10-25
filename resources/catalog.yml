@@ -1,0 +1,42 @@
+resources:
+  schemas:
+    landing:
+      catalog_name: ${var.catalog}
+      name: landing
+      comment: Raw files from every source; the ingestion contract (ADR-01)
+    bronze:
+      catalog_name: ${var.catalog}
+      name: bronze
+      comment: Source data as ingested, plus load metadata
+    silver:
+      catalog_name: ${var.catalog}
+      name: silver
+      comment: Cleaned, typed and conformed tables
+    gold:
+      catalog_name: ${var.catalog}
+      name: gold
+      comment: Business-ready tables for the app, Genie and dashboards
+    stream:
+      catalog_name: ${var.catalog}
+      name: stream
+      comment: Replay events and match state logs
+    ml:
+      catalog_name: ${var.catalog}
+      name: ml
+      comment: Registered models and feature tables
+    ops:
+      catalog_name: ${var.catalog}
+      name: ops
+      comment: Run logs, freshness and quota checks
+    app_snapshot:
+      catalog_name: ${var.catalog}
+      name: app_snapshot
+      comment: Nightly copies of Lakebase app tables (ADR-09)
+
+  volumes:
+    raw:
+      catalog_name: ${var.catalog}
+      schema_name: ${resources.schemas.landing.name}
+      name: raw
+      volume_type: MANAGED
+      comment: Landing zone for uploads, feeder files and stream checkpoints

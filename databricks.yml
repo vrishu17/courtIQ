@@ -1,0 +1,43 @@
+bundle:
+  name: courtiq
+
+include:
+  - resources/*.yml
+
+variables:
+  catalog:
+    description: Unity Catalog catalog for this environment
+    default: courtiq_dev
+  ingest_mode:
+    description: upload | feeder | direct
+    default: upload
+  lakebase_branch:
+    description: Lakebase branch used by jobs and the app
+    default: dev
+
+targets:
+  dev:
+    # No "mode: development": it always prefixes names with dev_<user>_ (an empty
+    # name_prefix is ignored). The catalog already isolates dev, so we keep names
+    # identical to prod and set the useful development-mode behaviour explicitly.
+    default: true
+    workspace:
+      host: https://dbc-32865a15-51a6.cloud.databricks.com
+      root_path: ~/.bundle/${bundle.name}/${bundle.target}
+    presets:
+      trigger_pause_status: PAUSED      # schedules never fire in dev
+      pipelines_development: true       # pipelines run in development mode
+      jobs_max_concurrent_runs: 4
+      tags:
+        project: courtiq
+        env: dev
+
+  prod:
+    mode: production
+    workspace:
+      host: https://dbc-32865a15-51a6.cloud.databricks.com
+      root_path: /Workspace/Shared/.bundle/${bundle.name}/${bundle.target}
+    variables:
+      catalog: courtiq_prod
+      lakebase_branch: main
+    # run_as (service principal courtiq-cicd) is added in Session 2

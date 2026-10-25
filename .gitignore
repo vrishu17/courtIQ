@@ -218,3 +218,15 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# --- CourtIQ additions ---
+# Databricks bundle working files
+.databricks/
+
+# Frontend
+node_modules/
+app/backend/static/
+
+# Local secrets and editor files
+.env.*
+.vscode/settings.json

@@ -1,0 +1,36 @@
+name: Feeder
+
+# Phase 0: run by hand to prove GitHub Actions can push a file into the Volume.
+# Phase 3 adds a schedule (every 15 min during match sessions) and the live-score script.
+on:
+  workflow_dispatch:
+    inputs:
+      catalog:
+        description: Catalog whose landing Volume receives the file
+        type: choice
+        options: [courtiq_dev] # courtiq_prod has no Volume until Phase 6 deploys prod
+        default: courtiq_dev
+
+permissions:
+  contents: read
+
+concurrency:
+  group: feeder
+  cancel-in-progress: false
+
+jobs:
+  push-test-file:
+    name: Push test file
+    runs-on: ubuntu-latest
+    env:
+      DATABRICKS_HOST: ${{ secrets.DATABRICKS_HOST }}
+      DATABRICKS_CLIENT_ID: ${{ secrets.DATABRICKS_CLIENT_ID }}
+      DATABRICKS_CLIENT_SECRET: ${{ secrets.DATABRICKS_CLIENT_SECRET }}
+      COURTIQ_CATALOG: ${{ inputs.catalog }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+        with:
+          python-version: "3.11"
+      - run: uv sync --locked
+      - run: uv run python -m feeder.push_test_file

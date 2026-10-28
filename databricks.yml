@@ -4,6 +4,16 @@ bundle:
 include:
   - resources/*.yml
 
+# Applied to every job, pipeline and app the bundle creates, and to the bundle's
+# workspace folder, so anyone in courtiq_admins (you or courtiq-cicd) can manage them.
+permissions:
+  - level: CAN_MANAGE
+    group_name: courtiq_admins
+  # The bundle folder is courtiq-cicd's home folder, where it always has CAN_MANAGE.
+  # Declared here so the bundle's permissions match the folder's.
+  - level: CAN_MANAGE
+    service_principal_name: 4bf9d69b-eee9-4e54-ad13-f3eb19d3d0d5
+
 variables:
   catalog:
     description: Unity Catalog catalog for this environment
@@ -23,7 +33,10 @@ targets:
     default: true
     workspace:
       host: https://dbc-32865a15-51a6.cloud.databricks.com
-      root_path: ~/.bundle/${bundle.name}/${bundle.target}
+      # In courtiq-cicd's home folder: one place for you and the principal to share
+      # deployment state (~ would differ per identity), and not writable by all users
+      # the way /Workspace/Shared is. You can still reach it as a workspace admin.
+      root_path: /Workspace/Users/4bf9d69b-eee9-4e54-ad13-f3eb19d3d0d5/.bundle/${bundle.name}/${bundle.target}
     presets:
       trigger_pause_status: PAUSED      # schedules never fire in dev
       pipelines_development: true       # pipelines run in development mode
@@ -36,8 +49,11 @@ targets:
     mode: production
     workspace:
       host: https://dbc-32865a15-51a6.cloud.databricks.com
-      root_path: /Workspace/Shared/.bundle/${bundle.name}/${bundle.target}
+      root_path: /Workspace/Users/4bf9d69b-eee9-4e54-ad13-f3eb19d3d0d5/.bundle/${bundle.name}/${bundle.target}
     variables:
       catalog: courtiq_prod
       lakebase_branch: main
-    # run_as (service principal courtiq-cicd) is added in Session 2
+    # Jobs and pipelines in prod run as the service principal, never as a person.
+    # The value is courtiq-cicd's Application ID (a UUID). It isn't a secret.
+    run_as:
+      service_principal_name: 4bf9d69b-eee9-4e54-ad13-f3eb19d3d0d5
